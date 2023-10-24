@@ -28,7 +28,6 @@
 #define MAX 1002
 #define INF 999999
 
-//스타일링 단축기 설정
 #define RED      "\x1b[31m"
 #define GREEN    "\x1b[32m"
 #define YELLOW   "\x1b[33m"
@@ -49,56 +48,52 @@
 
 using namespace std;
 
-//이동방향 설정
 const int dx[] = { 1, -1, 0, 0 }; 
 const int dy[] = { 0, 0, 1, -1 };
 
-//모든 A*, BFS에서 통용되는 방문기록
 int visited[MAX][MAX]; 
 
-int N, M; //시작맵의 크기(이후 다른 맵의 크기도 N, M에 비례됨)
-int x, y, mx, my; //플레이어 위치, 보스 위치,
-int mp, M_mp; //플레이어, 보스의 스킬포인트
-char **grid; //시작맵
-int visitedDun[30]; //던전 방문기록
+int N, M; 
+int x, y, mx, my; 
+int mp, M_mp; 
+char **grid;
+int visitedDun[30]; 
 
-time_t timer = time(NULL); //랜덤값 창출
+time_t timer = time(NULL); 
 
-const int countHabitat = 1; //필드보스 주거지 수
-bool isRun_M = false; //M의 활동 여부
-bool isAttackingOfo = false; //player의 공격 상태 여부
-const int appearanceInterval_M = 10; //보스의 활동 간격
-int tmpNx, tmpNy; //이벤트 발생시 변하는 위치 조정
-int modMap = 0; //맵의 모드
-int mmMod; //M의 활동목표
-int nflag = 0; //상황 창의 고정 여부
-int M_AttackFlag = 0, M_AttackDirect; //M의 공격 여부, 공격 방향
-int o_DistOfBox, M_DistOfo; //플레이어의 박스까지 거리, 보스의 플레이어까지 거리
-int deathFlag = 0; //죽었는지 여부
-int atx1, atx2, aty1, aty2; //보스의 공격 좌표 설정
-int breakWall = 0, directWall = -1; //다음에 벽을 부수는지 여부, 분쇄 방향
-int printRow; //맵 출력시 전역 변수와 상호하기 위함
-int LabyrinthQauntity, storeQauntity; //던전 수, 상점 수
-long long money = 8; //돈(게임재화)
+const int countHabitat = 1; 
+bool isRun_M = false;
+bool isAttackingOfo = false; 
+const int appearanceInterval_M = 10; 
+int tmpNx, tmpNy; 
+int modMap = 0; 
+int mmMod; 
+int nflag = 0;
+int M_AttackFlag = 0, M_AttackDirect; 
+int o_DistOfBox, M_DistOfo; 
+int deathFlag = 0;
+int atx1, atx2, aty1, aty2; 
+int breakWall = 0, directWall = -1; 
+int printRow; 
+int LabyrinthQauntity, storeQauntity; 
+long long money = 8;
 
-//플레이어와 보스의 기본 스탯 설정
 float p_at = 10, p_de = 5, max_p_hp = 100, p_alpha_at = 0, p_alpha_de = 0, p_alpha_hp = 0;
 float playerAttackPoint = p_at + p_alpha_at, playerDefensePoint = p_de + p_alpha_de, playerMaxHealthPoint = max_p_hp + p_alpha_hp, playerHealthPoint = playerMaxHealthPoint;
 float m_at = 30000, m_de = 20000, max_m_hp = 3000000, m_alpha_at = 0, m_alpha_de = 0, m_alpha_hp = 0;
 float MAttackPoint = m_at + m_alpha_at, MDefensePoint = m_de + m_alpha_de, MMaxHealthPoint = max_m_hp + m_alpha_hp, MHealthPoint = MMaxHealthPoint;
 
-int music_l[1000]; //음악 중복 방지를 위한 리스트
-string food_list[] = { "썩은 닭가슴살", "맛있는 닭가슴살", "중국산 찹쌀약과",  "국내산 찹쌀약과", "강황밥" }; //기본 음식 종류
-vector<tuple<int, string, int> > circum; //상황 창
-vector<pair<int, int> > deleteWall_list; //부술 벽의 좌표
+int music_l[1000]; 
+string food_list[] = { "썩은 닭가슴살", "맛있는 닭가슴살", "중국산 찹쌀약과",  "국내산 찹쌀약과", "강황밥" };
+vector<tuple<int, string, int> > circum; 
+vector<pair<int, int> > deleteWall_list; 
 
-map<const char*, int> music_dict; //현재 음악이 틀어져 있는지 체크
-map<int, pair<int, int> > habitatDictionary; //필드보스 주거지 딕셔너리
-map<string, int> food_dict; //플레이어가 가지고 있는 음식 딕셔너리
-map<string, int> M_foodDictionary; //M이 가지고 있는 음식 딕셔너리
-map<pair<int, int>, int>  dictionaryOfDun; //던전 딕셔너리
+map<const char*, int> music_dict; 
+map<int, pair<int, int> > habitatDictionary; 
+map<string, int> food_dict; 
+map<string, int> M_foodDictionary; 
+map<pair<int, int>, int>  dictionaryOfDun; 
 
-//음악 종류와 음악 ID 설정
 void setSound() {
 		music_dict["C:\\Users\\happy\\Music\\997FA1385D28524F1D.mp3"] = 0;
 		music_dict["C:\\Users\\happy\\Music\\995573385CFFD24F07.mp3"] = 1;
@@ -115,10 +110,9 @@ void setSound() {
 		music_dict["C:\\Users\\happy\\Music\\MP_Decapitation Head Fall Off.mp3"] = 12;
 		music_dict["C:\\Users\\happy\\Music\\MP_Coin Drop.mp3"] = 13;
 
-		for (int i = 0; i < 7; i++) music_l[i] = 0;
+		for (int i = 0; i < 13; i++) music_l[i] = 0;
 }
 
-//정렬
 bool compare1(const int a, const int b) {
 		return a < b;
 }
@@ -127,7 +121,6 @@ bool compare2(const pair<int, int> &a, const pair<int, int> &b) {
 		return a.first < b.first;
 }
 
-//게임 내 시간 
 struct GameTime {
 		int gameTimeMinutes = 0;
 		int gameTimeHours = 6;
@@ -136,7 +129,6 @@ struct GameTime {
 		vector<pair<int, int> > sightPoint;
 };
 
-//플레이어 옵션 창 리스트
 struct CheckList {
 		vector<string> option;
 		vector<string> ally;
@@ -144,7 +136,6 @@ struct CheckList {
 		vector<string> item;
 };
 
-//판매 가능한 상품들
 struct GlobalSell {
 		vector<tuple<string, string, int> > availableSellFood;
 		vector<tuple<string, string, int> > availableSellIngredient;
@@ -152,7 +143,6 @@ struct GlobalSell {
 		vector<tuple<string, string, int> > availableSellArmor;
 };
 
-//필드보스 관련 
 struct No_type {
 		deque<tuple<int, int, char> > No_1;
 		vector<tuple<int, int, char> > no1Place;
@@ -160,12 +150,10 @@ struct No_type {
 		float No1_at = 100, No1_de = 80, max_No1_hp = 3000, No1_hp = 3000;
 };
 
-//일반몬스터 관련
 struct Mon_type {
 		int mon1AttackPoint = 3, mon1DefensePoint = 2, mon1HealthPoint = 50, mon1Cost = 20;
 };
 
-//플레이어 공격 방향 여부
 struct AttackDirection {
 		int attackFlag = 0;
 		int frontA = 0, leftA = 0, rightA = 0, downA = 0;
@@ -178,7 +166,6 @@ Mon_type stanCo;
 AttackDirection Da;
 GlobalSell standard;
 
-//음악 실행 함수
 void playSoundEffect(const char* soundPath, int playtime) {
 		if (music_l[music_dict[soundPath]]) return;
 		else music_l[music_dict[soundPath]] = 1;
@@ -213,14 +200,13 @@ void playSoundEffect(const char* soundPath, int playtime) {
 		system->release();
 }
 
-//업적 관련 클래스 
 class Achievements {
 		bool getAchievements_List[1000];
 public:
 		void setList() {
 				for (int i = 0; i < 1000; i++) getAchievements_List[i] = false;
 		}
-		// (0,0)에 위치하였을 때
+  
 		void achievements1() {
 
 				if (getAchievements_List[0] == true) return;
@@ -236,7 +222,7 @@ public:
 
 
 		}
-		// 사는 품목과 가지고 있는 돈의 차이가 100000배 이상 날때(가격 > 현재 돈)
+
 		void achievements2() {
 				if (getAchievements_List[1]) return;
 
@@ -252,17 +238,15 @@ public:
 		}
 };
 
-//커서 위치 변경 함수
 void setCursor(int sx, int sy) {
 		COORD cursorPosition;
-		cursorPosition.X = sx; // X 좌표 (가로)
-		cursorPosition.Y = sy;  // Y 좌표 (세로)
+		cursorPosition.X = sx; 
+		cursorPosition.Y = sy;  
 
 		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 		SetConsoleCursorPosition(hConsole, cursorPosition);
 }
 
-//게임 시작 전 기본 설정
 class Start {
 		int puN;
 		int puM;
@@ -371,7 +355,6 @@ public:
 
 };
 
-//필드보스 주거지 디자인
 class No_Habitat {
 		char habitatType[40][3][3];
 		int randomValueX, randomValueY;
@@ -448,7 +431,6 @@ public:
 		}
 };
 
-//맵과 요소 설정
 class MakeMap {
 		int randomValueX, randomValueY;
 		int x, y, mx, my;
@@ -655,7 +637,6 @@ void getMoney(long long value) {
 		soundThread.detach();
 }
 
-//필드보스 
 class __No__ {
 		bool No_1Flag = false, No_1Wait = false;
 		int No1Attack = 0, No_1Down;
@@ -885,7 +866,7 @@ public:
 
 
 		}
-		//송충이 이동 경로, 왠만하면 건들지 않기
+  
 		void No1Attacking(int hx, int hy, char direct) {
 				if (direct == 'U') {
 						for (int i = 0; i < 3; i++) {
@@ -985,7 +966,6 @@ public:
 
 };
 
-//몬스터 
 class Mon{
 		string stringAboutCant = "|I#+@";
 		int mon1Count = 0, mon1Interval = 20;
@@ -1157,7 +1137,6 @@ public:
 		}
 };
 
-//플레이어 공격 지점 좌표 설정
 pair<int, int> playerAttack() {
 		if (Da.frontA == 1) return { x - 2, y };
 		else if (Da.downA == 1) return { x + 2, y };
@@ -1165,7 +1144,6 @@ pair<int, int> playerAttack() {
 		else if (Da.rightA == 1) return { x, y + 2 };
 }
 
-//출력하는 맵의 범위, 공격 지점 범위 설정
 tuple<int, int, int, int> monitor(int nowx, int nowy, int add_value1, int add_value2, int sMaxN, int sMaxM) {
 		int nextx1 = nowx - add_value1, nextx2 = nowx + add_value1;
 		int nexty1 = nowy - add_value2, nexty2 = nowy + add_value2;
@@ -1191,7 +1169,6 @@ tuple<int, int, int, int> attPoint(int attp, int mx, int my, int sMaxN, int sMax
 		else if (attp == 3) return monitor(mx, my + 2, 1, 1, sMaxN, sMaxM);
 }
 
-//보스의 이동 여부
 void M_CheckAndGo(int z) {
 		if (z == 0 && (mx + 1 != x || my != y) && grid[mx + 1][my] != '#') mx++;
 		else if (z == 1 && (mx - 1 != x || my != y) && grid[mx - 1][my] != '#') mx--;
@@ -1199,7 +1176,6 @@ void M_CheckAndGo(int z) {
 		else if (z == 3 && (mx != x || my - 1 != y) && grid[mx][my - 1] != '#') my--;
 }
 
-//모든 캐릭터의 이동 여부
 bool nextCheck(const int MaxN, const int MaxM, const int nx, const int ny, const char next, int mod, int fx, int fy, char**matrix, Mon & Mal) {
 		for (int i = 0; i < Field.No_1.size(); i++) { if (nx == get<0> (Field.No_1[i]) && ny == get<1> (Field.No_1[i])) return false; }
 		for (int i = 0; i < Mal.vectorOfMon1.size(); i++) { if (nx == get<0>(Mal.vectorOfMon1[i]) && ny == get<1>(Mal.vectorOfMon1[i])) return false; }
@@ -1219,7 +1195,6 @@ bool nextCheck(const int MaxN, const int MaxM, const int nx, const int ny, const
 
 }
 
-//플레이어, 보스 이동 bfs
 int moveBfs(int px, int py, int fx, int fy, int mod, char**matrix, int MaxN, int MaxM, Mon &Mal) {
 		deque<tuple<int, int, int> > q;
 
@@ -1271,7 +1246,6 @@ int moveBfs(int px, int py, int fx, int fy, int mod, char**matrix, int MaxN, int
 
 }
 
-//상자 얻었을 때
 void getBox(int nowx, int nowy, int who, int& numberOfBox)  {
 		thread soundThread(playSoundEffect, "C:\\Users\\happy\\Music\\MP_Pellet Gun Pump.mp3", 23000000);
 		soundThread.detach();
@@ -1308,7 +1282,6 @@ void getBox(int nowx, int nowy, int who, int& numberOfBox)  {
 		nflag = 1;
 }
 
-//보스가 부술 벽 체크
 int wallCheck(int ai, int aj, int al) {
 		if (directWall == 0) {
 				if (ai > mx && ai <= mx + al && aj == my) return 1;
@@ -1325,7 +1298,6 @@ int wallCheck(int ai, int aj, int al) {
 		return 0;
 }
 
-//더블 버퍼링
 void clearScreen() {
 		HANDLE hOut;
 		COORD Position;
@@ -1337,7 +1309,6 @@ void clearScreen() {
 		SetConsoleCursorPosition(hOut, Position);
 }
 
-//필드보스 주거지 출력
 void drawHabitat(const int num, const char tile) {
 		if (num == 0) {
 				if (tile == '+') cout << BOLDGREEN "+" RESET;
@@ -1347,7 +1318,6 @@ void drawHabitat(const int num, const char tile) {
 		}
 }
 
-//보스를 제외한 적 출력
 class DepictNo1 {
 
 public:
@@ -1452,7 +1422,6 @@ public:
 DepictNo1 DNo1;
 DepictMon DMon;
 
-//출력
 class ShowPartsOfMap {
 		int numberOfBox;
 public:
@@ -1830,7 +1799,7 @@ public:
 
 								if (pbf && !inDunFlag) continue;
 
-								if (isRun_M && M_AttackFlag && i >= atx1 && i <= atx2 && j >= aty1 && j <= aty2) { //beAttacked를 던전 내에서는 실행 안 하도록 하였기에 그냥 둬도 상관 없음
+								if (isRun_M && M_AttackFlag && i >= atx1 && i <= atx2 && j >= aty1 && j <= aty2) {
 										cout << RED;
 										if (i >= playerAttackX - 1 && i <= playerAttackX + 1 && j >= playerAttackY - 1 && j <= playerAttackY + 1) cout << MAGENTA;
 										if (i == mx && j == my) cout << "M" RESET;
@@ -1929,7 +1898,6 @@ public:
 
 };
 
-//스탯 증가 관리
 void increaseStat(const string key, const int who) {
 
 		if (key == food_list[0]) {
@@ -1976,7 +1944,6 @@ void increaseStat(const string key, const int who) {
 		}
 }
 
-//처맞을때 관련 
 void shutDown(float AttackPoint, float DefensePoint, float& HealthPoint, const string by, const string who) {
 		int typeWho;
 		for (string character : nowAvailableCheck.enemy) {
@@ -2026,7 +1993,6 @@ void shutDown2(float AttackPoint, float DefensePoint, int& HealthPoint, const st
 		HealthPoint -= (damage);
 }
 
-//던전
 class InDun : public MakeMap {
 		int numberOfBox;
 		int modDun;
@@ -2084,7 +2050,6 @@ public:
 		}
 };
 
-//일반적인 게임 내 함수들
 class Game {
 		int gapEating;
 		int numberOfBox;
@@ -2597,7 +2562,6 @@ public:
 
 };
 
-//플레이어 옵션
 class CheckInput {
 public:
 		char attackOptions() {
@@ -2859,7 +2823,6 @@ public:
 		}
 };
 
-//플레이어 죽을 때
 void death_que() {
 		for (int i = 0; i < 5; i++) {
 				cout << "." << endl;
@@ -2869,7 +2832,6 @@ void death_que() {
 		this_thread::sleep_for(chrono::milliseconds(1200));
 }
 
-//런타임
 int main() {
 		Start FirstWork;
 		MakeMap Makemap;
